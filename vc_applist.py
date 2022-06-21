@@ -31,7 +31,7 @@ def get_page_count():
         print(response.status_code)   
     return list
 
-def app_list():
+def app_list(): 
     total_pages = get_page_count()["total_pages"]
     for page in range(total_pages):
         try: 
@@ -44,20 +44,45 @@ def app_list():
             data = response.json()
             return data["_embedded"]["applications"]
 
-def scan_compliance(app_list):
+def compliance(app_list):
     output = []
     count = 0
     for app in app_list:
+        # print(json.dumps(app, indent=4))
         count += 1
         last_completed_scan_date = pd.to_datetime(app["last_completed_scan_date"])
+        # print(last_completed_scan_date)
         app_guid = app["guid"]
+        if app["profile"]["custom_fields"] is None: # checking custome metadata fields, need to expand this to specific fields like security champion
+            custom_fields = "FAIL"
+        else:
+            custom_fields = "PASS"
         if last_completed_scan_date is not None:
-            if start_date.date() > last_completed_scan_date.date():
-                scan_frequency = "Fail"
+            # print(start_date.date(), last_completed_scan_date.date())
+            LastCompleteScan = str(last_completed_scan_date.date())
+            # print(start_date.date(), last_completed_scan_date.date())
+            if start_date.date() > last_completed_scan_date.date(): # checking if the scan been completed in last 30 days
+                scan_frequency = "FAIL"
             else:
-                scan_frequency = "Pass"
-            list = ({"Count": str(count), "AppName": app["profile"]["name"], "LastCompleteScan": str(last_completed_scan_date.date()), "Scan_Frequency": scan_frequency, "AppID": app_guid})
-            output.append(list)
+                scan_frequency = "PASS"
+        else:
+            LastCompleteScan = "NONE"
+            scan_frequency = "FAIL"
+
+
+            
+
+        list = ({"Count": str(count), "AppName": app["profile"]["name"], "AppID": app_guid, "Compliance": {"LastCompleteScan": LastCompleteScan, "Scan_Frequency": scan_frequency, "policy_compliance_status": app["profile"]["policies"][0]["policy_compliance_status"], "custom_fields": custom_fields}})
+        output.append(list)
+    if count < 300:
+        license_count = "PASS"
+    else:
+        license_count = "FAIL"
+    
+    licenses_left = 300 - count
+    license_compliance = {"license_count": license_count, "remaining_licenses": licenses_left}
+    output.append(license_compliance)
+            
     return output            
 
 
