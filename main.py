@@ -15,9 +15,12 @@ import vc_summaryreport
 
 # Examples of findings API
 # scan_type=SCA&cvss_gte=6" 
-
+static_scan = "scan_type=STATIC"
 violates_policy_api = "violates_policy=TRUE"
 annotations_api = "include_annot=TRUE"
+severity_gte4 = "severity_gte=4"
+severity_gte3 = "severity_gte=3"
+
 
 def application_compliance():
     output = []
@@ -71,12 +74,26 @@ if __name__ == "__main__":
 ######################################################################################
 ######################################################################################
     # # Get all findings and save them to a file.
-    for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
-        findings = vc_findings.findings_api(app["AppID"], annotations_api)
-        for finding in findings:
-            print(finding)
-        filename = "vc_output_" + app["AppName"] + "_" + annotations_api
+    # output = []
+    # for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
+    #     findings = vc_findings.findings_api(app["AppID"], annotations_api)
+    #     count = 1
+    #     for finding in findings:
+    #         if finding["finding"]["finding_details"]["severity"] >= 4:  # findg severity high and above
+    #             first_found_date = pd.to_datetime(finding["finding"]["finding_status"]["first_found_date"])
+    #             last_seen_date = pd.to_datetime(finding["finding"]["finding_status"]["last_seen_date"])
+    #             print( first_found_date.date(), last_seen_date.date())
+    #             #output.update({count: finding})
+    #             output.append(finding)
+    #             count += 1
+    #     filename = "vc_output_" + app["AppName"] + "_" + annotations_api
+    #     write_json_file(output, filename)
+######################################################################################
+    # for app in vc_applist.compliance(app_list): # This gives info including AppID to use in the findings API
+    for app in vc_applist.compliance(app_list): # This gives info including AppID to use in the findings API
+        findings_count = 0
+        api = (static_scan, annotations_api, severity_gte4)
+        findings = vc_findings.findings_api2(app["AppID"], api)
+        filename = "vc_output_" + app["AppName"] + "_" + "_".join(api)
         write_json_file(findings, filename)
 ######################################################################################
-
-
