@@ -15,6 +15,9 @@ import vc_summaryreport
 
 ##### Examples of findings API ######
 # scan_type=SCA&cvss_gte=6" 
+new_findings = "new=true"
+sca_scan = "scan_type=SCA"
+cvss_gte6 = "cvss_gte=6"
 static_scan = "scan_type=STATIC"
 violates_policy_api = "violates_policy=TRUE"
 annotations_api = "include_annot=TRUE"
@@ -111,6 +114,10 @@ if __name__ == "__main__":
         print( first_found_date.date(), last_seen_date.date())
         output.append(finding)
         count += 1
+        if finding["finding"]["annotations"]:
+            print(finding["finding"]["annotations"])
+            for annontation in finding["finding"]["annotations"]:
+                annontation["action"] is not "APPROVED"
         
     print(output)
 
