@@ -46,6 +46,8 @@ def get_page_count(app_name, api):
     return list   
 
 def all_findings(app_guid):
+
+    # Get the page count so that we can get all the data
     try: 
         response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=0", auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
     except requests.RequestException as e:
@@ -56,7 +58,7 @@ def all_findings(app_guid):
         data = response.json()
         total_pages = int(data["page"]["total_pages"])
         total_elements = int(data["page"]["total_elements"])
-        list = {"app_name": app_name, "app_guid": app_guid, "total_elements": total_elements, "total_pages": total_pages}
+        list = {"app_name": app_name, "app_guid": app_guid, "total_elements": total_elements, "total_pages": total_pages} 
     else:
         print(response.status_code)   
     output = []
@@ -72,14 +74,11 @@ def all_findings(app_guid):
             #sys.exit(1)
         if response.ok:
             data = response.json()
-            #print(json.dumps(data, indent=4))
             total_pages = int(data["page"]["total_pages"])
             page_number += 1
             findings = data["_embedded"]["findings"]
             for finding in findings:
                 findings_count += 1
-                #print(findings_count)
-                #print({"findings_count": findings_count, "finding": finding})
                 status = "OPEN"
                 if finding["finding_status"]["status"] != status:
                     print(json.dumps(finding, indent=4))
@@ -133,8 +132,8 @@ def findings_api(app_guid, api):
         print(response.status_code)   
     return output  
 
-def findings_api2(app_guid, api):
-    # api should be a list
+def findings_api2(app_guid, api):     # api should be a list
+
     uri = "&".join(api)
     try: 
         response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=0" + "&" + str(uri), auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
@@ -167,14 +166,11 @@ def findings_api2(app_guid, api):
             #sys.exit(1)
         if response.ok:
             data = response.json()
-            #print(json.dumps(data, indent=4))
             total_pages = int(data["page"]["total_pages"])
             page_number += 1
             findings = data["_embedded"]["findings"]
             for finding in findings:
                 findings_count += 1
-                #print(findings_count)
-                #print({"findings_count": findings_count, "finding": finding})
                 output.append({"findings_count": findings_count, "finding": finding})
                 
     else:

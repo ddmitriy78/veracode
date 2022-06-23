@@ -24,9 +24,8 @@ def report(app_guid):
         sys.exit(1)
     if response.ok:
         output = response.json()
-
     else:
-        print(response.status_code)   
+        output = response.status_code
     return output
          
 
