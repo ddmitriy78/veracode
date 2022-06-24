@@ -13,8 +13,10 @@ import vc_applist
 import vc_findings
 import vc_summaryreport
 
+first_detection = datetime.datetime.now() - datetime.timedelta(30)
+
+
 ##### Examples of findings API ######
-# scan_type=SCA&cvss_gte=6" 
 new_findings = "new=true"
 sca_scan = "scan_type=SCA"
 cvss_gte6 = "cvss_gte=6"
@@ -23,7 +25,7 @@ violates_policy_api = "violates_policy=TRUE"
 annotations_api = "include_annot=TRUE"
 severity_gte4 = "severity_gte=4"
 severity_gte3 = "severity_gte=3"
-application_name = "Ascender Pay"
+application_name = ""
 
 
 def application_compliance():
@@ -50,9 +52,12 @@ if __name__ == "__main__":
     if application_name:
         for app in app_list:
             if application_name == app["profile"]["name"]:
-                app_list = app
+                app_list = []
+                app_list.append(app)
+                print(app)
+
             break
-    print(app_list)
+    write_json_file(app_list, "application_list")
 ######################################################################################
     # # Get list of findings which violate policy
     # for app in vc_applist.compliance(app_list): # This gives info including AppID to use in the findings API
@@ -81,44 +86,44 @@ if __name__ == "__main__":
     #     findigs = vc_findings.sort_findings(app["AppID"], findings_api)
 
 ######################################################################################
-######################################################################################
-    # # Get all findings and save them to a file.
-    # output = []
-    # for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
-    #     findings = vc_findings.findings_api(app["AppID"], annotations_api)
-    #     count = 1
-    #     for finding in findings:
-    #         if finding["finding"]["finding_details"]["severity"] >= 4:  # findg severity high and above
-    #             first_found_date = pd.to_datetime(finding["finding"]["finding_status"]["first_found_date"])
-    #             last_seen_date = pd.to_datetime(finding["finding"]["finding_status"]["last_seen_date"])
-    #             print( first_found_date.date(), last_seen_date.date())
-    #             #output.update({count: finding})
-    #             output.append(finding)
-    #             count += 1
-    #     filename = "vc_output_" + app["AppName"] + "_" + annotations_api
-    #     write_json_file(output, filename)
-######################################################################################
-    # for app in vc_applist.compliance(app_list): # This gives info including AppID to use in the findings API
-    api = (static_scan, annotations_api, severity_gte4)
-    findings = vc_findings.findings_api2(app["AppID"], api)
-    filename = "vc_output_" + app["AppName"] + "_" + "_".join(api)
-    write_json_file(findings, filename)
-######################################################################################
+
+
+    for app in app_list: # This gives info including AppID to use in the findings API
+        count = 1
+        output = []
+        app_name = (app["profile"]["name"])
+        app_guid = (app["guid"])
+        api = (static_scan, annotations_api)
+        findings = vc_findings.findings_api2(app_name, app_guid, api)
+        filename = "vc_output_" + app_name + "_" + "_".join(api)
+
 
 #####################PROCESS FINDINGS######################
-    output = []
-    count = 1
-    for finding in findings:
-        first_found_date = pd.to_datetime(finding["finding"]["finding_status"]["first_found_date"])
-        last_seen_date = pd.to_datetime(finding["finding"]["finding_status"]["last_seen_date"])
-        print( first_found_date.date(), last_seen_date.date())
-        output.append(finding)
-        count += 1
-        if finding["finding"]["annotations"]:
-            print(finding["finding"]["annotations"])
-            for annontation in finding["finding"]["annotations"]:
-                annontation["action"] is not "APPROVED"
-        
-    print(output)
+
+        for finding in findings:
+            first_found_date = pd.to_datetime(finding["finding"]["finding_status"]["first_found_date"])
+            last_seen_date = pd.to_datetime(finding["finding"]["finding_status"]["last_seen_date"])
+            print( first_found_date.date(), last_seen_date.date(), first_detection.date())
+            finding_status = finding["finding"]["finding_status"]["status"]
+            resolution = finding["finding"]["finding_status"]["resolution"]
+            resolution_status = finding["finding"]["finding_status"]["resolution_status"]
+            count += 1
+            if finding["finding"]["finding_status"]["status"] == "OPEN" and finding["finding"]["finding_details"]["severity"] >= 3:
+                if "annotations" in finding["finding"].keys():
+                    print(finding)
+                    output.append(finding)
+                if finding["finding"]["finding_status"]["mitigation_review_status"] == "NONE" and last_seen_date.date() > first_detection.date():
+                    output.append(finding)
+
+        else:
+
+            next
+
+        if output:
+            write_json_file(output, filename)
+######################################################################################
+
+
+
 
 

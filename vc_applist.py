@@ -42,9 +42,10 @@ def app_list():
             sys.exit(1)
         if response.ok:
             data = response.json()
-            return data["_embedded"]["applications"]
+    return data["_embedded"]["applications"]
 
 def compliance(app_list):
+    print(json.dumps(app_list,indent=4))
     output = []
     count = 0
     for app in app_list:
@@ -68,9 +69,6 @@ def compliance(app_list):
         else:
             LastCompleteScan = "NONE"
             scan_frequency = "FAIL"
-
-
-            
 
         list = ({"Count": str(count), "AppName": app["profile"]["name"], "AppID": app_guid, "Compliance": {"LastCompleteScan": LastCompleteScan, "Scan_Frequency": scan_frequency, "policy_compliance_status": app["profile"]["policies"][0]["policy_compliance_status"], "custom_fields": custom_fields}})
         output.append(list)

@@ -11,7 +11,6 @@ import vc_applist
 
 api_base = "https://api.veracode.com/appsec/"
 start_date = datetime.datetime.now() - datetime.timedelta(30)
-app_name = "Dayforce HCM Master"
 
 def get_page_count(app_name, api):
     try:
@@ -132,12 +131,12 @@ def findings_api(app_guid, api):
         print(response.status_code)   
     return output  
 
-def findings_api2(app_guid, api):     # api should be a list
+def findings_api2(app_name, app_guid, api):     # api should be a list
 
     uri = "&".join(api)
     try: 
-        response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=0" + "&" + str(uri), auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
-        print("api call", "https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=0" + "&" + str(uri))
+        response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=500&page=0" + "&" + str(uri), auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
+        print("api call", "https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=500&page=0" + "&" + str(uri))
     except requests.RequestException as e:
         print("Whoops!")
         print(e)
@@ -146,8 +145,6 @@ def findings_api2(app_guid, api):     # api should be a list
         data = response.json()
         total_pages = int(data["page"]["total_pages"])
         total_elements = int(data["page"]["total_elements"])
-        list = {"app_name": app_name, "app_guid": app_guid, "total_elements": total_elements, "total_pages": total_pages}
-        print(list)
     else:
         print(response.status_code)   
     
@@ -158,8 +155,8 @@ def findings_api2(app_guid, api):     # api should be a list
     for x in range(total_pages):
         print("Page", x, "out of", total_pages)
         try:
-            response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=" + str(x) + "&" + str(uri), auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
-            print("api call", "https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=100&page=" + str(x) + "&" + str(uri))
+            response = requests.get("https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=500&page=" + str(x) + "&" + str(uri), auth=RequestsAuthPluginVeracodeHMAC(), headers={"User-Agent": "Python HMAC Example"}, verify = False)
+            print("api call", "https://api.veracode.com/appsec/v2/applications/" + app_guid + "/findings?size=500&page=" + str(x) + "&" + str(uri))
         except requests.RequestException as e:
             print("Whoops!")
             print(e)
@@ -171,7 +168,7 @@ def findings_api2(app_guid, api):     # api should be a list
             findings = data["_embedded"]["findings"]
             for finding in findings:
                 findings_count += 1
-                output.append({"findings_count": findings_count, "finding": finding})
+                output.append({"app_name": app_name, "findings_count": findings_count, "finding": finding})
                 
     else:
         print(response.status_code)   
