@@ -1,4 +1,4 @@
-from __future__ import annotations
+#from __future__ import annotations
 import sys
 from xml.etree.ElementPath import find
 import requests
@@ -8,6 +8,8 @@ from veracode_api_signing.plugin_requests import RequestsAuthPluginVeracodeHMAC
 import pandas as pd
 import json
 import os
+import csv
+from copy import deepcopy
 
 import vc_applist
 import vc_findings
@@ -45,9 +47,17 @@ def write_json_file(input, filename):
 
     return output
 
-if __name__ == "__main__":
-    app_list = vc_applist.app_list() # Get list of applications from Veracode
+def write_csv_file(input, filename):
+    output = "Writing file", filename
+    print("Writing file", "output/" + filename + ".csv")
+    file1 = open("output/" + filename + ".csv", 'w')
+    file1.write(str(input)) # write to file
+    file1.close()  
 
+if __name__ == "__main__":
+    
+    # Get list of applications from Veracode
+    app_list = vc_applist.app_list() 
     # If application name exists match and replace app_list with single app record
     if application_name:
         for app in app_list:
@@ -58,52 +68,39 @@ if __name__ == "__main__":
 
             break
     write_json_file(app_list, "application_list")
+    
 ######################################################################################
-    # # Get list of findings which violate policy
-    # for app in vc_applist.compliance(app_list): # This gives info including AppID to use in the findings API
-    #     findings_count = 0
-    #     findings = vc_findings.findings_api(app["AppID"], violates_policy_api)
-    #     filename = "vc_output_" + app["AppName"] + "_" + violates_policy_api
-    #     write_json_file(findings, filename)
-######################################################################################
-######################################################################################
-    # Get all findings and save them to a file.
-    # for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
-    #     findigs = vc_findings.all_findings(app["AppID"])
-    #     filename = "vc_output_" + app["AppName"] + "_" + "all_findings"
-    #     write_json_file(findigs, filename)
-######################################################################################
+    # Create custom compliance report
+    compliance = vc_applist.compliance(app_list)
+    data = pd.json_normalize(compliance)
+    write_csv_file(data.to_csv(), "compliance")   
 ######################################################################################
     # Get summary report for each application and save to file.
     # for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
-    #     findigs = vc_summaryreport.report(app["AppID"])
+    #     report = vc_summaryreport.report(app["AppID"])
     #     filename = "vc_output_" + app["AppName"] + "_" + "summary_report"
-    #     write_json_file(findigs, filename)
-######################################################################################
-######################################################################################
-    # # Get all findings and save them to a file.
-    # for app in vc_applist.compliance(app_list):  # This gives info including AppID to use in the findings API
-    #     findigs = vc_findings.sort_findings(app["AppID"], findings_api)
+    #     if report:
+    #         write_json_file(report, filename)
 
 ######################################################################################
+######################################################################################
+    # Using findings API get findings
 
-
-    for app in app_list: # This gives info including AppID to use in the findings API
+    for app in app_list:
         count = 1
         output = []
         app_name = (app["profile"]["name"])
         app_guid = (app["guid"])
-        api = (static_scan, annotations_api)
+        api = (static_scan, annotations_api, violates_policy_api)
         findings = vc_findings.findings_api2(app_name, app_guid, api)
-        filename = "vc_output_" + app_name + "_" + "_".join(api)
-
+        filename = "vc_output_" + app_name + "_" + "&".join(api)
 
 #####################PROCESS FINDINGS######################
 
         for finding in findings:
             first_found_date = pd.to_datetime(finding["finding"]["finding_status"]["first_found_date"])
             last_seen_date = pd.to_datetime(finding["finding"]["finding_status"]["last_seen_date"])
-            print( first_found_date.date(), last_seen_date.date(), first_detection.date())
+            # print( first_found_date.date(), last_seen_date.date(), first_detection.date())
             finding_status = finding["finding"]["finding_status"]["status"]
             resolution = finding["finding"]["finding_status"]["resolution"]
             resolution_status = finding["finding"]["finding_status"]["resolution_status"]
@@ -121,9 +118,9 @@ if __name__ == "__main__":
 
         if output:
             write_json_file(output, filename)
-######################################################################################
-
-
+            data = pd.json_normalize(output)
+            write_csv_file(data.to_csv(), filename) 
+# ######################################################################################
 
 
 
